@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">FirebaseChat</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+<!--    <string name="nav_header_title">Android Studio</string>-->
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="user_avatar_desc">User avatar</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_settings">Settings</string>
+    <string name="logout">Logout</string>
+    <string name="email_input_hint">Email</string>
+    <string name="password_input_hint">Password</string>
+    <string name="confirm_password_input_hint">Confirm Password</string>
+    <string name="signup_btn_txt">Sign up</string>
+    <string name="login_btn_txt">Log in</string>
+    <string name="retry">Retry</string>
+    <string name="name">Name</string>
+    <string name="save">Save</string>
+    <string name="done">Done</string>
+    <string name="cancel">Cancel</string>
+    <string name="chose_from_gallery">Chose from gallery</string>
+    <string name="enter_url">Enter image URL please</string>
+    <string name="edit_image">Edit Image</string>
+    <string name="new_pass">New password</string>
+    <string name="new_name">New name</string>
+    <string name="password">Password</string>
+    <string name="confirm_pass">Confirm password</string>
+    <string name="edit_pass">Edit Password</string>
+    <string name="edit_name">Edit name</string>
+    <string name="send">Send</string>
+</resources>
