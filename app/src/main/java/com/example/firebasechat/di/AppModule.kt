@@ -3,7 +3,7 @@ package com.example.firebasechat.di
 import android.content.Context
 import com.example.firebasechat.data.sharedpref.UserSharedPreferenceLiveData
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
@@ -21,7 +21,7 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides
-    fun provideFirebaseDatabase(): FirebaseDatabase = FirebaseDatabase.getInstance()
+    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
     @Provides
     fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()

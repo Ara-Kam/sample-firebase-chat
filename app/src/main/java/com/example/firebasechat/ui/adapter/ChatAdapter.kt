@@ -9,16 +9,15 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.firebasechat.R
 import com.example.firebasechat.data.entity.ChatMessage
 import com.example.firebasechat.util.timeStampDateTimeConverter
-import com.firebase.ui.database.paging.DatabasePagingOptions
-import com.firebase.ui.database.paging.FirebaseRecyclerPagingAdapter
-import com.firebase.ui.database.paging.LoadingState
+import com.firebase.ui.firestore.paging.FirestorePagingAdapter
+import com.firebase.ui.firestore.paging.FirestorePagingOptions
+import com.firebase.ui.firestore.paging.LoadingState
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.google.firebase.firestore.DocumentSnapshot
+import java.lang.Exception
 
-class ChatAdapter(databasePagingOptions: DatabasePagingOptions<ChatMessage>) :
-    FirebaseRecyclerPagingAdapter<ChatMessage, RecyclerView.ViewHolder>(databasePagingOptions) {
-
+class ChatAdapter(firestorePagingOptions: FirestorePagingOptions<ChatMessage>) :
+    FirestorePagingAdapter<ChatMessage, RecyclerView.ViewHolder>(firestorePagingOptions) {
     companion object {
         private const val TYPE_OWNER = 1
         private const val TYPE_OTHERS = 2
@@ -62,9 +61,9 @@ class ChatAdapter(databasePagingOptions: DatabasePagingOptions<ChatMessage>) :
     }
 
     override fun getItemViewType(position: Int): Int {
-        val chatItem: DataSnapshot? = getItem(position)
+        val chatItem: DocumentSnapshot? = getItem(position)
         var userType: Int = TYPE_OTHERS
-        (chatItem?.value as HashMap<*, *>).entries.forEach lit@{
+        chatItem?.data?.entries?.forEach lit@{
             if (it.key == "uid") {
                 userType =
                     if (it.value == mFirebaseAuth.currentUser?.uid) TYPE_OWNER else TYPE_OTHERS
@@ -79,8 +78,8 @@ class ChatAdapter(databasePagingOptions: DatabasePagingOptions<ChatMessage>) :
         private var ownerName = itemView.findViewById<TextView>(R.id.sender_name)
         private var sendDate = itemView.findViewById<TextView>(R.id.date)
         fun bindOwner(position: Int) {
-            val chatItem: DataSnapshot = getItem(position)!!
-            (chatItem.value as HashMap<*, *>).entries.forEach {
+            val chatItem: DocumentSnapshot = getItem(position)!!
+            chatItem.data?.entries?.forEach {
                 when (it.key) {
                     "text" -> ownerMsgTextView.text = it.value.toString()
                     "sender_name" -> ownerName.text = it.value.toString()
@@ -96,14 +95,13 @@ class ChatAdapter(databasePagingOptions: DatabasePagingOptions<ChatMessage>) :
         private var othersName = itemView.findViewById<TextView>(R.id.sender_name)
         private var sendDate = itemView.findViewById<TextView>(R.id.date)
         fun bindOthers(position: Int) {
-            val chatItem: DataSnapshot = getItem(position)!!
-            (chatItem.value as HashMap<*, *>).entries.forEach {
+            val chatItem: DocumentSnapshot = getItem(position)!!
+            chatItem.data?.entries?.forEach {
                 when (it.key) {
                     "text" -> othersMsgTextView.text = it.value.toString()
                     "sender_name" -> othersName.text = it.value.toString()
                     "date" -> sendDate.text = timeStampDateTimeConverter(it.value.toString())
                 }
-
             }
         }
     }
@@ -118,10 +116,10 @@ class ChatAdapter(databasePagingOptions: DatabasePagingOptions<ChatMessage>) :
         return this
     }
 
-    override fun onError(databaseError: DatabaseError) {
-        super.onError(databaseError)
+    override fun onError(exception: Exception) {
+        super.onError(exception)
         swipeRefreshLayout.isRefreshing = false
-        databaseError.toException().printStackTrace()
+        exception.printStackTrace()
     }
 }
 

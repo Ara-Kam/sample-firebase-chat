@@ -18,9 +18,11 @@ import com.example.firebasechat.databinding.FragmentHomeBinding
 import com.example.firebasechat.ui.adapter.ChatAdapter
 import com.example.firebasechat.util.VerticalSpaceItemDecoration
 import com.example.firebasechat.util.closeKeyboard
-import com.firebase.ui.database.paging.DatabasePagingOptions
+import com.firebase.ui.firestore.paging.FirestorePagingOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -33,11 +35,10 @@ class HomeFragment : Fragment() {
     lateinit var firebaseAuth: FirebaseAuth
 
     @set:Inject
-    lateinit var firebaseDatabase: FirebaseDatabase
+    lateinit var firebaseFirestore: FirebaseFirestore
 
     private val homeViewModel: HomeViewModel by viewModels()
-    lateinit var fragmentHomeBinding: FragmentHomeBinding
-    lateinit var databaseReference: DatabaseReference
+    private lateinit var fragmentHomeBinding: FragmentHomeBinding
     private lateinit var chatListAdapter: ChatAdapter
 
     override fun onCreateView(
@@ -60,9 +61,6 @@ class HomeFragment : Fragment() {
             lifecycleOwner = viewLifecycleOwner
             viewModel = homeViewModel
         }
-
-        // Initialize Database
-        databaseReference = firebaseDatabase.reference
 
         homeViewModel.sendSuccessfully.observe(viewLifecycleOwner, Observer {
             if (it == null) return@Observer
@@ -87,42 +85,26 @@ class HomeFragment : Fragment() {
         val pagedListConfig = PagedList.Config.Builder()
             .setEnablePlaceholders(false)
             .setPrefetchDistance(5)
-            .setPageSize(10)
+            .setPageSize(5)
             .build()
 
-        // Initialize FirebasePagingOptions
-        val databasePagingOptions = DatabasePagingOptions.Builder<ChatMessage>()
-            .setLifecycleOwner(viewLifecycleOwner)
-            .setQuery(databaseReference, pagedListConfig, ChatMessage::class.java)
-            .build()
+        val firestoreQuery: Query =
+            firebaseFirestore.collection("messages").orderBy("date", Query.Direction.DESCENDING)
+
+        // Initialize FirestorePagingOptions
+        val databasePagingOptions =
+            FirestorePagingOptions.Builder<ChatMessage>()
+                .setLifecycleOwner(viewLifecycleOwner)
+                .setQuery(
+                    firestoreQuery,
+                    pagedListConfig,
+                    ChatMessage::class.java
+                )
+                .build()
 
         chatListAdapter = ChatAdapter(databasePagingOptions)
             .withSwipeToRefreshLayout(fragmentHomeBinding.swipeRefreshLayout)
             .withFirebaseAuth(firebaseAuth)
-
-        databaseReference.orderByKey().limitToLast(1)
-            .addChildEventListener(object : ChildEventListener {
-                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                    val newQuery = databaseReference
-                    val newOptions = DatabasePagingOptions.Builder<ChatMessage>()
-                        .setQuery(newQuery, pagedListConfig, ChatMessage::class.java)
-                        .build()
-
-                    chatListAdapter.updateOptions(newOptions)
-                }
-
-                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                }
-
-                override fun onChildRemoved(snapshot: DataSnapshot) {
-                }
-
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                }
-            })
 
         chatListAdapter.updateOptions(databasePagingOptions)
 
@@ -135,19 +117,7 @@ class HomeFragment : Fragment() {
             )
             // Init list layout manager and adapter
             layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
-            (layoutManager as LinearLayoutManager).stackFromEnd = true
-
-            // Scroll to the last item
-            chatListAdapter.registerAdapterDataObserver(object :
-                RecyclerView.AdapterDataObserver() {
-                override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                    (layoutManager as LinearLayoutManager).smoothScrollToPosition(
-                        fragmentHomeBinding.messageRecyclerView,
-                        null,
-                        chatListAdapter.getItemCount()
-                    )
-                }
-            })
+            (layoutManager as LinearLayoutManager).reverseLayout = true
 
             adapter = chatListAdapter
         }
@@ -155,16 +125,6 @@ class HomeFragment : Fragment() {
         fragmentHomeBinding.swipeRefreshLayout.setOnRefreshListener {
             chatListAdapter.refresh()
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        chatListAdapter.startListening()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        chatListAdapter.stopListening()
     }
 
     private fun normalState() {

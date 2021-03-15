@@ -3,12 +3,8 @@ package com.example.firebasechat.data.util
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import com.example.firebasechat.data.entity.ChatMessage
-import com.example.firebasechat.data.entity.User
-import com.example.firebasechat.data.sharedpref.UserSharedPreferenceLiveData
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
+import com.example.firebasechat.util.tempUserNameFromUid
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -18,14 +14,19 @@ class ManageChatStrategy {
         @ExperimentalCoroutinesApi
         fun sendMessage(
             message: ChatMessage?,
-            firebaseDB: FirebaseDatabase
+            firebaseFirestore: FirebaseFirestore
         ): LiveData<ResultDataWrapper<Void?>> = liveData(Dispatchers.IO) {
             try {
                 emit(ResultDataWrapper.loading())
 
-                // send message
-                val result = firebaseDB.reference.push().setValue(message).await()
-                when (result.status) {
+                // Send message:: save message in a new document
+                val result = message?.let {
+                    firebaseFirestore.collection("messages")
+                        .document(tempUserNameFromUid(message.uid) + "_" + message.date)
+                        .set(it).await()
+                }
+
+                when (result?.status) {
                     ResultDataWrapper.Status.SUCCESS -> {
                         emit(ResultDataWrapper.success(null))
                     }
@@ -46,7 +47,7 @@ class ManageChatStrategy {
                     }
                     else -> emit(
                         ResultDataWrapper.error(
-                            result.message ?: "Task was failed.", null
+                            result?.message ?: "Task was failed.", null
                         )
                     )
                 }

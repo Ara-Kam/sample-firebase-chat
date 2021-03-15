@@ -4,7 +4,6 @@ import com.example.firebasechat.data.entity.User
 import com.example.firebasechat.data.sharedpref.UserSharedPreferenceLiveData
 import com.example.firebasechat.data.util.ManageUserStrategy
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
